@@ -8,10 +8,22 @@
 
 	<PropertyGroup>
 		<Nullable>enable</Nullable>
+		
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<!-- Fix 'processor architecture mismatch' warnings -->
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
+	<ItemGroup>
+  		<Compile Remove="Tests\**" />
+ 		<None Include="Tests\**" />
+	</ItemGroup>
 
 	<!-- References -->
 	<ItemGroup>

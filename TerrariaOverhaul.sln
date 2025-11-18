@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TerrariaOverhaul", "Terrari
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TerrariaOverhaul.BuildTools", "BuildTools\TerrariaOverhaul.BuildTools.csproj", "{DC0EE5E3-3A12-4F06-BC75-C3760B026047}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,14 @@ Global
 		{DC0EE5E3-3A12-4F06-BC75-C3760B026047}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DC0EE5E3-3A12-4F06-BC75-C3760B026047}.Release|x86.ActiveCfg = Release|Any CPU
 		{DC0EE5E3-3A12-4F06-BC75-C3760B026047}.Release|x86.Build.0 = Release|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Debug|x86.Build.0 = Debug|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Release|x86.ActiveCfg = Release|Any CPU
+		{7DA20AED-DC9D-404A-BD55-1DD2F2D0CD5A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
