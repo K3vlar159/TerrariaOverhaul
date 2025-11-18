@@ -7,3 +7,4 @@ BuildTools/Libraries/TerrariaOverhaul.BuildTools*
 *.ignored
 *.user
 changelog.txt
+cicd.txt
