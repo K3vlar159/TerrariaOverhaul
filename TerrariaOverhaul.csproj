@@ -18,11 +18,16 @@
 		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
 			<_Parameter1>Tests</_Parameter1>
 		</AssemblyAttribute>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>Benchmarks</_Parameter1>
+		</AssemblyAttribute>
 	</ItemGroup>
 
 	<ItemGroup>
   		<Compile Remove="Tests\**" />
  		<None Include="Tests\**" />
+		<Compile Remove="Benchmarks\**" />
+		<None Include="Benchmarks\**" />
 	</ItemGroup>
 
 	<!-- References -->

@@ -1,0 +1,79 @@
+name: Tests Only (No Build)
+
+# This workflow runs unit tests and benchmarks that don't require tModLoader compilation
+# Full mod compilation is not possible on GitHub runners without tModLoader installation
+
+on:
+  push:
+    branches: [dev, master]
+  pull_request:
+    branches: [dev, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      # Tests project can build independently since it only references public APIs
+      - name: Restore Tests dependencies
+        run: dotnet restore Tests/Tests.csproj
+      
+      - name: Build Tests project
+        run: dotnet build Tests/Tests.csproj --no-restore
+        
+      - name: Run unit tests
+        run: dotnet test Tests/Tests.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+      
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action/windows@v2
+        if: always()
+        with:
+          files: '**/test-results.trx'
+          check_name: 'Test Results'
+      
+      # Benchmarks
+      - name: Restore Benchmarks dependencies
+        run: dotnet restore Benchmarks/Benchmarks.csproj
+        
+      - name: Build Benchmarks project
+        run: dotnet build Benchmarks/Benchmarks.csproj --no-restore -c Release
+        
+      - name: Run benchmarks
+        run: dotnet run --project Benchmarks/Benchmarks.csproj --no-build -c Release
+        
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: BenchmarkDotNet.Artifacts/results/*
+      
+      # Code quality checks
+      - name: Check code formatting
+        run: dotnet format --verify-no-changes --verbosity diagnostic
+        continue-on-error: true
+        
+      - name: Report status to Discord
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          description: |
+            Tests: ${{ job.status }}
+            Click [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) to view.
+
+# Note: Full mod compilation requires:
+# - tModLoader installation (not available on GitHub runners)
+# - Terraria ownership verification
+# - Decompiled source files
+# 
+# Consider self-hosted runner or local testing for full builds
