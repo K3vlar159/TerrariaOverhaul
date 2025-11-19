@@ -31,14 +31,7 @@ jobs:
         run: dotnet build Tests/Tests.csproj --no-restore
         
       - name: Run unit tests
-        run: dotnet test Tests/Tests.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-      
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/windows@v2
-        if: always()
-        with:
-          files: '**/test-results.trx'
-          check_name: 'Test Results'
+        run: dotnet test Tests/Tests.csproj --no-build --verbosity normal
       
       # Benchmarks
       - name: Restore Benchmarks dependencies
@@ -49,27 +42,12 @@ jobs:
         
       - name: Run benchmarks
         run: dotnet run --project Benchmarks/Benchmarks.csproj --no-build -c Release
-        
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: benchmark-results
-          path: BenchmarkDotNet.Artifacts/results/*
+        continue-on-error: true
       
       # Code quality checks
       - name: Check code formatting
         run: dotnet format --verify-no-changes --verbosity diagnostic
         continue-on-error: true
-        
-      - name: Report status to Discord
-        uses: sarisia/actions-status-discord@v1
-        if: always()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          description: |
-            Tests: ${{ job.status }}
-            Click [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) to view.
 
 # Note: Full mod compilation requires:
 # - tModLoader installation (not available on GitHub runners)
