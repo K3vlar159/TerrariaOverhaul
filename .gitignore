@@ -8,3 +8,4 @@ BuildTools/Libraries/TerrariaOverhaul.BuildTools*
 *.user
 changelog.txt
 cicd.txt
+fail.txt

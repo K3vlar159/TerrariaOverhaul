@@ -34,23 +34,24 @@ jobs:
           ref: 1.4.4
           path: tModLoader-dev
       
-      - name: Create symbolic link to tModLoader
+      - name: Setup tModLoader targets file
         shell: pwsh
         run: |
-          Write-Host "Creating tModLoader symlink..."
-          # Create parent directory for symlink
+          Write-Host "Setting up tModLoader.targets..."
           $parentDir = Split-Path -Parent $PWD
-          $symlinkPath = Join-Path $parentDir "tModLoader"
+          $targetsSource = Join-Path $PWD "tModLoader-dev\tMLMod.targets"
+          $targetsDestination = Join-Path $parentDir "tModLoader.targets"
           
-          # Remove if exists
-          if (Test-Path $symlinkPath) {
-            Remove-Item $symlinkPath -Recurse -Force
+          Write-Host "Source: $targetsSource"
+          Write-Host "Destination: $targetsDestination"
+          
+          if (Test-Path $targetsSource) {
+            Copy-Item $targetsSource $targetsDestination -Force
+            Write-Host "tModLoader.targets copied successfully"
+          } else {
+            Write-Host "Warning: tMLMod.targets not found in tModLoader-dev"
+            Get-ChildItem "tModLoader-dev" | Select-Object Name
           }
-          
-          # Create directory junction (works better on Windows than symlink)
-          New-Item -ItemType Junction -Path $symlinkPath -Target "$PWD\tModLoader-dev" -Force
-          
-          Write-Host "tModLoader dev environment linked at: $symlinkPath"
       
       - name: Build TerrariaOverhaul mod
         shell: pwsh
