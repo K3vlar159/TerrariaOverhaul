@@ -46,30 +46,23 @@ jobs:
           echo "Adding SteelSeriesEngineWrapper.dll..."
           cp patches/Terraria/Terraria/Libraries/Common/SteelSeriesEngineWrapper.dll ./$TERRARIA_VERSION/Windows/SteelSeriesEngineWrapper.dll
       
+      - name: Generate ownership key from Terraria files
+        shell: pwsh
+        working-directory: tModLoader
+        run: |
+          Write-Host "Generating ownership key from Terraria Server files..."
+          $terrariaExe = Get-Item "$env:TERRARIA_VERSION/Windows/TerrariaServer.exe"
+          $hash = Get-FileHash -Path $terrariaExe.FullName -Algorithm SHA256
+          $hexKey = $hash.Hash.Substring(0, 64)
+          Write-Host "Generated key: $hexKey"
+          echo "GENERATED_KEY=$hexKey" >> $env:GITHUB_ENV
+      
       - name: Run tModLoader setup
         shell: pwsh
         working-directory: tModLoader
         run: |
-          $key = "$env:TERRARIA_OWNERSHIP_KEY".Trim()
-          
-          # Auto-detect if key is base64 or hex
-          if ($key -match '^[A-Fa-f0-9]{64}$') {
-            Write-Host "Detected hex key format"
-            $hexKey = $key
-          } elseif ($key -match '^[A-Za-z0-9+/]+=*$') {
-            Write-Host "Detected base64 key format, converting to hex..."
-            try {
-              $bytes = [System.Convert]::FromBase64String($key)
-              $hexKey = [System.BitConverter]::ToString($bytes).Replace("-","")
-              Write-Host "Key converted successfully"
-            } catch {
-              Write-Host "ERROR: Failed to convert base64 key: $_"
-              exit 1
-            }
-          } else {
-            Write-Host "ERROR: Key format not recognized"
-            exit 1
-          }
+          $hexKey = "$env:GENERATED_KEY"
+          Write-Host "Using generated key for decompilation"
           
           Write-Host "Running setup-cli decompile..."
           bash -c "./setup-cli.bat decompile --key `"$hexKey`" --terraria-steam-dir ./$env:TERRARIA_VERSION/Windows --tml-dev-steam-dir steam_build --plain-progress -f --strict"
@@ -81,8 +74,6 @@ jobs:
           
           Write-Host "Running setup-cli regen-source..."
           bash -c "./setup-cli.bat regen-source --plain-progress -f --strict"
-        env:
-          TERRARIA_OWNERSHIP_KEY: ${{ secrets.TERRARIA_OWNERSHIP_KEY }}
       
       - name: Build tModLoader framework
         shell: bash
