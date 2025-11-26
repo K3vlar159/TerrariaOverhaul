@@ -1,7 +1,6 @@
 name: Build and Test
 
-# Simplified approach: Use tModLoader's pre-built release artifacts
-# No ownership key needed - downloads public release from GitHub
+# Full tModLoader CI approach with decompilation and ownership key
 
 on:
   push:
@@ -11,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  TMODLOADER_VERSION: v2025.09.3.3
-  DOTNET_VERSION: 8.0.x
+  TERRARIA_VERSION: 1449
+  DOTNET_VERSION: 8.0.203
 
 jobs:
   build-and-test:
@@ -21,71 +20,91 @@ jobs:
     steps:
       - name: Checkout mod repository
         uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '${{env.DOTNET_VERSION}}'
+          path: TerrariaOverhaul
       
-      - name: Clone tModLoader dev repository
+      - name: Checkout tModLoader dev repository
         uses: actions/checkout@v4
         with:
           repository: tModLoader/tModLoader
           ref: 1.4.4
-          path: tModLoader-dev
+          path: tModLoader
       
-      - name: Setup tModLoader targets file
-        shell: pwsh
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '${{env.DOTNET_VERSION}}'
+      
+      - name: Download Terraria Server
+        shell: bash
+        working-directory: tModLoader
         run: |
-          Write-Host "Setting up tModLoader.targets..."
-          $parentDir = Split-Path -Parent $PWD
-          $targetsSource = Join-Path $PWD "tModLoader-dev\tMLMod.targets"
-          $targetsDestination = Join-Path $parentDir "tModLoader.targets"
+          echo "Downloading Terraria Server v$TERRARIA_VERSION..."
+          curl -s -L https://terraria.org/api/download/pc-dedicated-server/terraria-server-$TERRARIA_VERSION.zip -o terrariaserver.zip
+          unzip -q terrariaserver.zip
           
-          Write-Host "Source: $targetsSource"
-          Write-Host "Destination: $targetsDestination"
+          echo "Adding SteelSeriesEngineWrapper.dll..."
+          cp patches/Terraria/Terraria/Libraries/Common/SteelSeriesEngineWrapper.dll ./$TERRARIA_VERSION/Windows/SteelSeriesEngineWrapper.dll
+      
+      - name: Run tModLoader setup
+        shell: bash
+        working-directory: tModLoader
+        run: |
+          echo "Running setup-cli decompile and regen-source..."
+          ./setup-cli.bat decompile \
+            --key "$TERRARIA_OWNERSHIP_KEY" \
+            --terraria-steam-dir ./$TERRARIA_VERSION/Windows \
+            --tml-dev-steam-dir steam_build \
+            --plain-progress -f --strict
           
-          if (Test-Path $targetsSource) {
-            Copy-Item $targetsSource $targetsDestination -Force
-            Write-Host "tModLoader.targets copied successfully"
-          } else {
-            Write-Host "Warning: tMLMod.targets not found in tModLoader-dev"
-            Get-ChildItem "tModLoader-dev" | Select-Object Name
-          }
+          ./setup-cli.bat regen-source --plain-progress -f --strict
+        env:
+          TERRARIA_OWNERSHIP_KEY: ${{ secrets.TERRARIA_OWNERSHIP_KEY }}
+      
+      - name: Build tModLoader framework
+        shell: bash
+        working-directory: tModLoader
+        run: |
+          echo "Building tModLoader framework..."
+          dotnet build src/tModLoader/Terraria/Terraria.csproj -c Release --nologo -v q
+          
+          mkdir -p steam_build
+      
+      - name: Copy mod to ModSources
+        shell: bash
+        run: |
+          echo "Setting up mod in tModLoader ModSources..."
+          mkdir -p tModLoader/steam_build/ModSources
+          cp -r TerrariaOverhaul tModLoader/steam_build/ModSources/
       
       - name: Build TerrariaOverhaul mod
-        shell: pwsh
+        shell: bash
+        working-directory: tModLoader/steam_build/ModSources/TerrariaOverhaul
         run: |
-          Write-Host "Building TerrariaOverhaul mod..."
-          Write-Host "Current directory: $PWD"
-          Write-Host "Checking tModLoader.targets..."
-          Get-ChildItem ..\tModLoader -ErrorAction SilentlyContinue | Select-Object Name
-          
-          dotnet build TerrariaOverhaul.csproj -c Release --nologo -v detailed
-        continue-on-error: true
+          echo "Building TerrariaOverhaul mod..."
+          dotnet build TerrariaOverhaul.csproj -c Release --nologo
       
       - name: Run Tests
-        shell: pwsh
+        shell: bash
+        working-directory: tModLoader/steam_build/ModSources/TerrariaOverhaul
         run: |
-          Write-Host "Running unit tests..."
+          echo "Running unit tests..."
           dotnet test Tests/Tests.csproj --verbosity normal
       
       - name: Run Benchmarks
-        shell: pwsh
+        shell: bash
+        working-directory: tModLoader/steam_build/ModSources/TerrariaOverhaul
         run: |
-          Write-Host "Running performance benchmarks..."
+          echo "Running performance benchmarks..."
           dotnet run --project Benchmarks/Benchmarks.csproj -c Release
         continue-on-error: true
       
-      - name: Upload test results
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
-          name: test-results
-          path: |
-            **/TestResults/**
-            BenchmarkDotNet.Artifacts/**
+          name: TerrariaOverhaul-Build
+          path: tModLoader/steam_build/ModSources/TerrariaOverhaul/bin/
 
-# Note: This simplified approach downloads pre-built tModLoader release
-# Works without ownership key but may have limitations for full mod compilation
-# Tests and benchmarks should work if they don't require full tModLoader build
+# This workflow mirrors tModLoader's official CI approach
+# Requires TERRARIA_OWNERSHIP_KEY secret in repository settings
