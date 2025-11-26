@@ -27,41 +27,40 @@ jobs:
         with:
           dotnet-version: '${{env.DOTNET_VERSION}}'
       
-      - name: Download tModLoader release
-        shell: pwsh
-        run: |
-          Write-Host "Downloading tModLoader $env:TMODLOADER_VERSION..."
-          $releaseUrl = "https://github.com/tModLoader/tModLoader/releases/download/$env:TMODLOADER_VERSION/tModLoader.zip"
-          Invoke-WebRequest -Uri $releaseUrl -OutFile tModLoader.zip
-          
-          Write-Host "Extracting tModLoader..."
-          Expand-Archive -Path tModLoader.zip -DestinationPath tModLoader -Force
-          
-          Write-Host "tModLoader extracted successfully"
-          Get-ChildItem tModLoader | Select-Object Name
+      - name: Clone tModLoader dev repository
+        uses: actions/checkout@v4
+        with:
+          repository: tModLoader/tModLoader
+          ref: 1.4.4
+          path: tModLoader-dev
       
-      - name: Setup tModLoader environment
+      - name: Create symbolic link to tModLoader
         shell: pwsh
         run: |
-          Write-Host "Creating ModSources directory..."
-          $modSourcesPath = "tModLoader\ModSources\TerrariaOverhaul"
-          New-Item -ItemType Directory -Force -Path $modSourcesPath
+          Write-Host "Creating tModLoader symlink..."
+          # Create parent directory for symlink
+          $parentDir = Split-Path -Parent $PWD
+          $symlinkPath = Join-Path $parentDir "tModLoader"
           
-          Write-Host "Copying mod files..."
-          Copy-Item -Path ".\*" -Destination $modSourcesPath -Recurse -Force -Exclude ".git","tModLoader","bin","obj"
-          
-          Write-Host "Setting up tModLoader.targets reference..."
-          $targetsFile = "tModLoader\tMLMod.targets"
-          if (Test-Path $targetsFile) {
-            Copy-Item $targetsFile -Destination "tModLoader\tModLoader.targets" -Force
+          # Remove if exists
+          if (Test-Path $symlinkPath) {
+            Remove-Item $symlinkPath -Recurse -Force
           }
+          
+          # Create directory junction (works better on Windows than symlink)
+          New-Item -ItemType Junction -Path $symlinkPath -Target "$PWD\tModLoader-dev" -Force
+          
+          Write-Host "tModLoader dev environment linked at: $symlinkPath"
       
       - name: Build TerrariaOverhaul mod
         shell: pwsh
-        working-directory: tModLoader/ModSources/TerrariaOverhaul
         run: |
           Write-Host "Building TerrariaOverhaul mod..."
-          dotnet build TerrariaOverhaul.csproj -c Release --nologo -v minimal
+          Write-Host "Current directory: $PWD"
+          Write-Host "Checking tModLoader.targets..."
+          Get-ChildItem ..\tModLoader -ErrorAction SilentlyContinue | Select-Object Name
+          
+          dotnet build TerrariaOverhaul.csproj -c Release --nologo -v detailed
         continue-on-error: true
       
       - name: Run Tests
