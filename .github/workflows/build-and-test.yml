@@ -50,15 +50,36 @@ jobs:
         shell: pwsh
         working-directory: tModLoader
         run: |
-          Write-Host "Converting base64 key to hex..."
-          $base64Key = "$env:TERRARIA_OWNERSHIP_KEY"
-          $bytes = [System.Convert]::FromBase64String($base64Key)
-          $hexKey = [System.BitConverter]::ToString($bytes).Replace("-","")
-          Write-Host "Key converted successfully"
+          $key = "$env:TERRARIA_OWNERSHIP_KEY".Trim()
           
-          Write-Host "Running setup-cli decompile and regen-source..."
+          # Auto-detect if key is base64 or hex
+          if ($key -match '^[A-Fa-f0-9]{64}$') {
+            Write-Host "Detected hex key format"
+            $hexKey = $key
+          } elseif ($key -match '^[A-Za-z0-9+/]+=*$') {
+            Write-Host "Detected base64 key format, converting to hex..."
+            try {
+              $bytes = [System.Convert]::FromBase64String($key)
+              $hexKey = [System.BitConverter]::ToString($bytes).Replace("-","")
+              Write-Host "Key converted successfully"
+            } catch {
+              Write-Host "ERROR: Failed to convert base64 key: $_"
+              exit 1
+            }
+          } else {
+            Write-Host "ERROR: Key format not recognized"
+            exit 1
+          }
+          
+          Write-Host "Running setup-cli decompile..."
           bash -c "./setup-cli.bat decompile --key `"$hexKey`" --terraria-steam-dir ./$env:TERRARIA_VERSION/Windows --tml-dev-steam-dir steam_build --plain-progress -f --strict"
           
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERROR: Decompile failed"
+            exit $LASTEXITCODE
+          }
+          
+          Write-Host "Running setup-cli regen-source..."
           bash -c "./setup-cli.bat regen-source --plain-progress -f --strict"
         env:
           TERRARIA_OWNERSHIP_KEY: ${{ secrets.TERRARIA_OWNERSHIP_KEY }}
