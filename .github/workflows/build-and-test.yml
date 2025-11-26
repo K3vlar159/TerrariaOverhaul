@@ -47,17 +47,19 @@ jobs:
           cp patches/Terraria/Terraria/Libraries/Common/SteelSeriesEngineWrapper.dll ./$TERRARIA_VERSION/Windows/SteelSeriesEngineWrapper.dll
       
       - name: Run tModLoader setup
-        shell: bash
+        shell: pwsh
         working-directory: tModLoader
         run: |
-          echo "Running setup-cli decompile and regen-source..."
-          ./setup-cli.bat decompile \
-            --key "$TERRARIA_OWNERSHIP_KEY" \
-            --terraria-steam-dir ./$TERRARIA_VERSION/Windows \
-            --tml-dev-steam-dir steam_build \
-            --plain-progress -f --strict
+          Write-Host "Converting base64 key to hex..."
+          $base64Key = "$env:TERRARIA_OWNERSHIP_KEY"
+          $bytes = [System.Convert]::FromBase64String($base64Key)
+          $hexKey = [System.BitConverter]::ToString($bytes).Replace("-","")
+          Write-Host "Key converted successfully"
           
-          ./setup-cli.bat regen-source --plain-progress -f --strict
+          Write-Host "Running setup-cli decompile and regen-source..."
+          bash -c "./setup-cli.bat decompile --key `"$hexKey`" --terraria-steam-dir ./$env:TERRARIA_VERSION/Windows --tml-dev-steam-dir steam_build --plain-progress -f --strict"
+          
+          bash -c "./setup-cli.bat regen-source --plain-progress -f --strict"
         env:
           TERRARIA_OWNERSHIP_KEY: ${{ secrets.TERRARIA_OWNERSHIP_KEY }}
       
