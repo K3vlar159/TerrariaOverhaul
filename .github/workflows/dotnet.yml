@@ -44,5 +44,8 @@ jobs:
     - name: Build
       run: dotnet build TerrariaOverhaul.sln --configuration Release
 
+    - name: Test
+      run: dotnet test --configuration Release --no-build --verbosity normal
+
     - name: Lint
       run: dotnet format style TerrariaOverhaul.sln --verify-no-changes --severity error
