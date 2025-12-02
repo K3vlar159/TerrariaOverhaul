@@ -41,7 +41,6 @@ jobs:
         cd ..
         cd ./TerrariaOverhaul
         
-      
     - name: Build
       run: dotnet build TerrariaOverhaul.sln --configuration Release
 

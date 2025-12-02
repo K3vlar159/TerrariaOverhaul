@@ -7,6 +7,7 @@
 	<Import Project="BuildTools\ShaderCompiler\KBOFXCTask.targets" />
 
 	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
