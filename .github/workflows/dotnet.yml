@@ -1,0 +1,49 @@
+name: .NET Build and Test
+
+on:
+  push:
+    branches: 
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  ci:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+            
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Pull TML
+      run: |
+        cd ..
+        mkdir ./tmod
+        touch tModLoader.targets
+        
+        echo '<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+            <Import Project=".\tmod\tMLMod.targets" />
+        </Project>' > tModLoader.targets
+        
+        cd ./tmod
+        curl -L https://github.com/tModLoader/tModLoader/releases/latest/download/tModLoader.zip -o tModLoader.zip
+        unzip tModLoader.zip
+        cd ..
+        cd ./TerrariaOverhaul
+        
+      
+    - name: Build
+      run: dotnet build TerrariaOverhaul.sln --configuration Release
+
+    - name: Lint
+      run: dotnet format style TerrariaOverhaul.sln --verify-no-changes --severity error
