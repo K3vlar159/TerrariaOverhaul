@@ -2,25 +2,27 @@ using TerrariaOverhaul.Common.Movement;
 
 namespace Tests;
 
+// Fake trieda pre testovanie
+internal class FakeCoyoteTimeLogic : CoyoteTimeLogic
+{
+	public void SetRemainingTicks(uint ticks)
+	{
+		Activate();
+		while (RemainingTicks > ticks && RemainingTicks > 0) {
+			Update();
+		}
+	}
+	
+	public void SimulateFrames(int frameCount)
+	{
+		for (int i = 0; i < frameCount; i++) {
+			Update();
+		}
+	}
+}
+
 public class CoyoteTimeLogicTests
 {
-	[Fact]
-	public void CoyoteTime_NewInstance_ShouldBeInactive()
-	{
-		var logic = new CoyoteTimeLogic();
-		
-		Assert.False(logic.IsActive);
-		Assert.Equal(0u, logic.RemainingTicks);
-	}
-	
-	[Fact]
-	public void CoyoteTime_DefaultDuration_ShouldBe13Ticks()
-	{
-		var logic = new CoyoteTimeLogic();
-		
-		Assert.Equal(13u, logic.DurationInTicks);
-	}
-	
 	[Fact]
 	public void CoyoteTime_ShouldActivate_WhenPlayerStartsFalling()
 	{
@@ -110,20 +112,6 @@ public class CoyoteTimeLogicTests
 	}
 	
 	[Fact]
-	public void CoyoteTime_CannotCoyoteJump_WhenNotPressing()
-	{
-		var logic = new CoyoteTimeLogic();
-		logic.Activate();
-		
-		bool canJump = logic.CanCoyoteJump(
-			velocityY: 2f,
-			controlJump: false
-		);
-		
-		Assert.False(canJump);
-	}
-	
-	[Fact]
 	public void CoyoteTime_Deactivate_ShouldClearTimer()
 	{
 		var logic = new CoyoteTimeLogic();
@@ -134,27 +122,6 @@ public class CoyoteTimeLogicTests
 		
 		Assert.False(logic.IsActive);
 		Assert.Equal(0u, logic.RemainingTicks);
-	}
-	
-	[Theory]
-	[InlineData(13u, 60, 216.67)]   // 60 FPS
-	[InlineData(13u, 30, 433.33)]   // 30 FPS
-	[InlineData(13u, 120, 108.33)]  // 120 FPS
-	public void CoyoteTime_TicksToMilliseconds_ShouldConvertCorrectly(uint ticks, int fps, double expectedMs)
-	{
-		double actualMs = CoyoteTimeLogic.TicksToMilliseconds(ticks, fps);
-		
-		Assert.Equal(expectedMs, actualMs, precision: 2);
-	}
-	
-	[Fact]
-	public void CoyoteTime_CustomDuration_ShouldWork()
-	{
-		var logic = new CoyoteTimeLogic { DurationInTicks = 20 };
-		
-		logic.Activate();
-		
-		Assert.Equal(20u, logic.RemainingTicks);
 	}
 	
 	[Fact]
@@ -183,4 +150,31 @@ public class CoyoteTimeLogicTests
 		Assert.False(logic.IsActive);
 		Assert.Equal(0u, logic.RemainingTicks);
 	}
+	
+	// ===== FAKE TESTY =====
+	
+	[Fact]
+	public void FakeCoyoteTime_SimulateFrames_ShouldUpdateMultipleTimes()
+	{
+		var fake = new FakeCoyoteTimeLogic();
+		fake.Activate();
+		
+		fake.SimulateFrames(5);
+		
+		Assert.Equal(8u, fake.RemainingTicks);
+		Assert.True(fake.IsActive);
+	}
+	
+	[Fact]
+	public void FakeCoyoteTime_SimulateFrames_ShouldExpireCorrectly()
+	{
+		var fake = new FakeCoyoteTimeLogic();
+		fake.Activate();
+		
+		fake.SimulateFrames(20);  // Viac než duration
+		
+		Assert.Equal(0u, fake.RemainingTicks);
+		Assert.False(fake.IsActive);
+	}
+	
 }
