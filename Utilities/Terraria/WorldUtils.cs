@@ -3,10 +3,10 @@
 // See LICENSE.md for details.
 
 using System;
-using Terraria.DataStructures;
-using Terraria;
-using Microsoft.Xna.Framework;
 using System.Runtime.CompilerServices;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.DataStructures;
 using TerrariaOverhaul.Utilities.Xna;
 
 namespace TerrariaOverhaul.Utilities.Terraria;

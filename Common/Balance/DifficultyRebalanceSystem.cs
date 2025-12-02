@@ -6,8 +6,8 @@ using System;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.ID;
 using Terraria.GameContent.ItemDropRules;
+using Terraria.ID;
 using Terraria.ModLoader;
 using TerrariaOverhaul.Core.Configuration;
 

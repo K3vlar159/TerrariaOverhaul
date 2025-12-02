@@ -5,13 +5,13 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using TerrariaOverhaul.Common.Charging;
+using TerrariaOverhaul.Common.EntityEffects;
 using TerrariaOverhaul.Common.Items;
 using TerrariaOverhaul.Common.Movement;
-using TerrariaOverhaul.Common.EntityEffects;
 using TerrariaOverhaul.Core.ItemComponents;
 using TerrariaOverhaul.Core.Time;
-using TerrariaOverhaul.Utilities.Xna;
 using TerrariaOverhaul.Utilities.Terraria;
+using TerrariaOverhaul.Utilities.Xna;
 
 namespace TerrariaOverhaul.Common.Archery;
 
